@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxh.interview.mapper.WorkOrderMapper">
+
+    <select id="workOrderSearch" resultType="com.cxh.interview.entity.WorkOrder">
+        select a.* from work_order a
+        <where>
+            <if test="order.orderNo != null and order.orderNo != ''">
+                and a.order_no like concat('%',#{order.orderNo},'%')
+            </if>
+            <if test="order.orderType != null">
+                and a.order_type = #{order.orderType}
+            </if>
+            <if test="order.title != null and order.title != ''">
+                and a.title like concat('%',#{order.title},'%')
+            </if>
+            <if test="order.handleDeptId != null">
+                and a.handle_dept_id = #{order.handleDeptId}
+            </if>
+            <if test="order.createTimeStart != null">
+                and a.create_time >= #{order.createTimeStart}
+            </if>
+
+            <if test="order.createTimeEnd != null">
+                and a.create_time <![CDATA[<]]> #{order.createTimeEnd}
+            </if>
+            <if test="order.fenpaiTimeStart != null">
+                and a.fenpai_time >= #{order.fenpaiTimeStart}
+            </if>
+
+            <if test="order.fenpaiTimeEnd != null">
+                and a.fenpai_time <![CDATA[<]]> #{order.fenpaiTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryTotalNumberOfOrderAndOverdueRateEveryDay"
+            resultType="com.cxh.interview.model.vo.QueryTotalNumberOfOrderAndOverdueRateEveryDayVO">
+        SELECT
+        DATE(w.create_time) AS time,
+        COUNT(w.id) AS total_orders,
+        COALESCE(SUM(CASE WHEN w.is_overdue = 1 THEN 1 ELSE 0 END) / NULLIF(COUNT(w.id), 0), 0) AS overdue_rate
+        FROM
+        work_order w
+        <where>
+            <if test="param.startTime != null">
+                and w.create_time >= #{param.startTime}
+            </if>
+
+            <if test="param.endTime != null">
+                and w.create_time <![CDATA[<]]> #{param.endTime}
+            </if>
+        </where>
+        GROUP BY
+        DATE(w.create_time)
+        ORDER BY
+        DATE(w.create_time);
+    </select>
+
+    <select id="queryTotalNumberOfOrderAndOverdueRateEveryDepartment"
+            resultType="com.cxh.interview.model.vo.QueryTotalNumberOfOrderAndOverdueRateEveryDepartmentVO">
+        SELECT
+        d.dept_name AS department_name,
+        COUNT(w.id) AS total_orders,
+        COALESCE(
+        SUM(CASE WHEN w.is_overdue = 1 THEN 1 ELSE 0 END) / NULLIF(COUNT(w.id), 0), 0
+        ) AS overdue_rate
+        FROM
+        department d
+        LEFT JOIN work_order w ON d.dept_id = w.handle_dept_id
+        <where>
+            <if test="param.startTime != null">
+                and w.create_time >= #{param.startTime}
+            </if>
+
+            <if test="param.endTime != null">
+                and w.create_time <![CDATA[<]]> #{param.endTime}
+            </if>
+        </where>
+        GROUP BY
+        d.dept_name;
+    </select>
+
+    <select id="queryTotalNumberOfOrderAndOverdueRateEveryOrderType"
+            resultType="com.cxh.interview.model.vo.QueryTotalNumberOfOrderAndOverdueRateEveryOrderTypeVO">
+        SELECT
+        w.order_type AS order_type,
+        COUNT(w.id) AS total_orders,
+        COALESCE(SUM(CASE WHEN w.is_overdue = 1 THEN 1 ELSE 0 END) / NULLIF(COUNT(w.id), 0), 0) AS overdue_rate
+        FROM
+        work_order w
+        <where>
+            <if test="param.startTime != null">
+                and w.create_time >= #{param.startTime}
+            </if>
+
+            <if test="param.endTime != null">
+                and w.create_time <![CDATA[<]]> #{param.endTime}
+            </if>
+        </where>
+        GROUP BY
+        w.order_type
+        ORDER BY
+        w.order_type;
+    </select>
+</mapper>
