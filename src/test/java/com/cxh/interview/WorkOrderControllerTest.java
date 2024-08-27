@@ -13,30 +13,37 @@ import com.cxh.interview.model.vo.QueryTotalNumberOfOrderAndOverdueRateEveryOrde
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @SpringBootTest
 @Slf4j
+@AutoConfigureMockMvc
 public class WorkOrderControllerTest {
 
     @Autowired
     private WorkOrderController controller;
 
+    @Autowired
+    private MockMvc mockMvc;
+
     @Test
-    void workOrderSaveTest() {
-        WorkOrderSaveDTO dto = new WorkOrderSaveDTO();
+    void workOrderSaveTest() throws Exception {
 
-        dto.setOrderType(0);
-//        dto.setOrderType(4);
-        dto.setTitle("工单标题");
-//        dto.setContent("工单内容");
+        String json = "{ \"orderType\": 0, \"title\": \"工单标题\" }";  // 缺少content字段
 
-        RestResp restResp = controller.workOrderSave(dto);
-
-        log.info(restResp.toString());
-
+        mockMvc.perform(post("/order/save")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
